@@ -43,6 +43,7 @@
         </g>
         <rect width="25" x=30 y=20>
       </svg>
+      <div id="tip"></div>
     </div>
     <script>
       // load chart data
@@ -65,12 +66,16 @@
           mapGroup = d3.select("#mapGroup");
           legend = d3.select("#legend");
           axisGroup = d3.select("#axisGroup");
+          tip = d3.select("#tip");
           // mapping functions
           projection = d3.geoConicEqualArea()
             .parallels([-26.29, -44.29])
             .rotate([-149.13, 0]);
           path = d3.geoPath()
             .projection(projection);
+          voronoi = d3.voronoi()
+            .x(function(d) { return path.centroid(d)[0]; })
+            .y(function(d) { return path.centroid(d)[1]; });
           colours = d3.scaleLinear()
             .range(["#003da6", "white", "#de2b33"])
             .domain([d3.min(boothData.features, function(d) { return d.properties.swing; }), 0, d3.max(boothData.features, function(d) { return d.properties.swing; })])
@@ -89,12 +94,6 @@
             .append("path")
               .datum(waterData)
               .classed("water", true);
-          booths = mapGroup
-            .selectAll(".booth")
-              .data(boothData.features)
-            .enter().append("path")
-              .classed("booth", true)
-              .style("fill", function(d) { return colours(d.properties.swing); });
           // set up legend
           legendRange = colours.domain();
           d3.select("#gradient")
@@ -122,10 +121,6 @@
         mapGroup.transition()
           .duration(1000)
           .style("opacity", 1);
-        booths.transition()
-          .duration(1000)
-          .delay(function(d, i) { return 2000 / boothData.features.length * i; })
-          .style("opacity", 1);
         legend.transition()
           .duration(1000)
           .style("opacity", 1);
@@ -138,6 +133,7 @@
         margin.bottom = footer.node().getBoundingClientRect().height;
         projection.fitExtent([[margin.left, margin.top + 15], [width - margin.right, height - margin.bottom - 15]], boothData);
         path.pointRadius(width < 500 ? 7.5 : 10);
+        voronoi.size([width, height]);
         // draw map elements
         d3.selectAll(".suburb, .border, .water, .booth")
           .attr("d", path);
@@ -148,6 +144,69 @@
           .attr("height", height * .5 - 25);
         y.range([height * .5 - 25, (1 + legendRange[0] / (legendRange[2] - legendRange[0])) * height * .5 - 25, 0]);
         axisGroup.call(axis);
+        // draw booths
+        booths = mapGroup
+          .selectAll(".booth")
+            .data(voronoi.polygons(boothData.features), function(d) { return d.data.properties.name; });
+        booths.exit()
+          .remove();
+        entering = booths
+          .enter().append("g")
+            .classed("booth", true);
+        entering.append("path")
+          .classed("point", true)
+            .style("fill", function(d) { return colours(d.data.properties.swing); })
+            .attr("d", function(d) { return path(d.data); });
+        booths.select(".point")
+          .attr("d", function(d) { return path(d.data); });
+        entering.append("path")
+          .classed("cell", true)
+          .attr("d", function(d) { return !d ? null : d3.line()(d) + "Z"; })
+          .on("mouseover", hoverOver)
+          .on("mouseout", hoverOut);
+        booths.select(".cell")
+          .attr("d", function(d) { return !d ? null : d3.line()(d) + "Z"; });
+        // fade-in
+        d3.selectAll(".point")
+          .transition()
+            .duration(1000)
+            .delay(function(d, i) { return 2000 / boothData.features.length * i; })
+            .style("opacity", 1);
+      }
+      function hoverOver(d) {
+        d3.select(this.parentNode)
+          .raise()
+          .classed("selected", true)
+          .select(".point");
+        centroid = path.centroid(d.data);
+        tip.style("opacity", 0)
+          .style("top", "0px") // reset position to tool tip for correct sizing
+          .style("left", "0px")
+          .html("<p>" + d.data.properties.name + "</p>"
+              + "<p><span>" + d3.format(".1%")(d.data.properties.swing) + "</span> swing to Labor/Greens</p>"
+              + "<p><span>" + d3.format(".1%")(d.data.properties.gov) + "</span> votes for Labor/Greens</p>"
+              + "<p><span>" + d3.format(",.0f")(d.data.properties.votes) + "</span> total votes</p>");
+        // set location of tool tip to ensure it's always inside chart
+        let tipWidth = parseFloat(tip.style("width"));
+        let tipHeight = parseFloat(tip.style("height"));
+        tip.style("top", function() {
+          return centroid[1] + tipHeight + 32 > height ?
+            (centroid[1] - tipHeight - 32) + "px":
+            (centroid[1] + 16) + "px";
+          })
+          .style("left", function() {
+            return centroid[0] + (tipWidth / 2) + 16 > width ?
+              (width - tipWidth - 16) + "px" :
+              centroid[0] - (tipWidth / 2) - 16 < 0 ?
+              "16px" :
+              (centroid[0] - (tipWidth / 2)) + "px";
+          })
+          .style("opacity", 1);
+      }
+      function hoverOut() {
+        d3.select(this.parentNode)
+          .classed("selected", false);
+        tip.style("opacity", 0);
       }
     </script>
   </body>
