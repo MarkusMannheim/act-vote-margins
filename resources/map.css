@@ -80,10 +80,17 @@ h1, p {
 .water {
   fill:  rgba(28, 28, 28, .5);
 }
-.booth {
+.booth .cell {
+  fill: rgba(0, 0, 0, 0);
+}
+.booth .point {
   stroke: #1C1C1C;
   stroke-width: .5;
   opacity: 0;
+}
+.booth.selected .point {
+  stroke: #FFB300;
+  stroke-width: 2;
 }
 a {
   text-decoration: none;
@@ -106,6 +113,29 @@ a:hover {
   text-anchor: end;
   font-size: .75rem;
   font-weight: bold;
+}
+#tip {
+  position: absolute;
+  opacity: 0;
+  text-align: center;
+  padding: 5px;
+  border-radius: 5px;
+  background-color: rgba(28, 28, 28, .75);
+  pointer-events: none;
+  color: white;
+}
+#tip p {
+  margin: 0;
+  font-size: .8rem;
+  font-family: "ABCSans Light", "Arial Narrow", sans-serif;
+  font-weight: normal;
+}
+#tip p:first-child {
+  font-family: "ABCSans Regular", "Arial", sans-serif;
+  font-weight: bold;
+}
+#tip span {
+  color: #FFB300;
 }
 @media (max-width: 500px) {
   #header, #footer, #map {
