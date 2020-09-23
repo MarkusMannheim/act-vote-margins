@@ -80,7 +80,8 @@
             .on("mouseout", hoverOut);
         // vote labels
         rows.each(function(d, i) {
-          if (i < 2) {
+          document.body.getBoundingClientRect().width < 500 ? j = 2 : j = 3;
+          if (i < j) {
             d3.select(this)
               .select(".bar")
                 .append("p")

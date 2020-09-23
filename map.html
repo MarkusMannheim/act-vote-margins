@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-155991615-1');
+    </script>
+    <!-- my stuff -->
+    <meta charset="utf-8">
+    <title>2016 ACT polling booth swings</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Initial scripts -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <link href="./resources/map.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+  <body>
+    <!-- Initial page layout -->
+    <div id="container">
+      <svg id="map">
+        <g id="mapGroup"></g>
+      </svg>
+      <div id="header">
+        <h1>2016 POLLING BOOTH SWINGS</h1>
+        <p>first-preference swings to governing parties (Labor & Greens)</p>
+      </div>
+      <div id="footer">
+        <p>Excludes pre-poll, mobile and some other polling locations, as well as places without 2012 and 2016 results.</p>
+        <p>Sources: ABC, <a href='https://www.elections.act.gov.au/elections_and_voting/past_act_legislative_assembly_elections' target="_blank">ACT Electoral Commission</a></p>
+      </div>
+      <svg id="legend" width="55px">
+        <defs>
+          <linearGradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%"></linearGradient>
+        </defs>
+        <g id="axisGroup" transform="translate(30, 20)">
+          <text id="axisLabel" x="25" y="-10">swing</text>
+        </g>
+        <rect width="25" x=30 y=20>
+      </svg>
+    </div>
+    <script>
+      // load chart data
+      d3.queue()
+        .defer(d3.json, "./resources/suburbs.topojson")
+        .defer(d3.json, "./resources/water.topojson")
+        .defer(d3.json, "./resources/border.topojson")
+        .defer(d3.json, "./resources/booths.geojson")
+        .awaitAll(function(error, data) {
+          if (error) throw error;
+          // format data
+          suburbData = topojson.feature(data[0], data[0].objects.areas);
+          waterData = topojson.feature(data[1], data[1].objects.areas);
+          borderData = topojson.feature(data[2], data[2].objects.areas);
+          boothData = data[3];
+          // page elements
+          header = d3.select("#header");
+          footer = d3.select("#footer");
+          map = d3.select("#map");
+          mapGroup = d3.select("#mapGroup");
+          legend = d3.select("#legend");
+          axisGroup = d3.select("#axisGroup");
+          // mapping functions
+          projection = d3.geoConicEqualArea()
+            .parallels([-26.29, -44.29])
+            .rotate([-149.13, 0]);
+          path = d3.geoPath()
+            .projection(projection);
+          colours = d3.scaleLinear()
+            .range(["#003da6", "white", "#de2b33"])
+            .domain([d3.min(boothData.features, function(d) { return d.properties.swing; }), 0, d3.max(boothData.features, function(d) { return d.properties.swing; })])
+            .interpolate(d3.interpolateHsl);
+          // set up map
+          suburbs = mapGroup
+            .selectAll(".suburb")
+              .data(suburbData.features)
+            .enter().append("path")
+              .classed("suburb", true);
+          border = mapGroup
+            .append("path")
+              .datum(borderData)
+              .classed("border", true);
+          water = mapGroup
+            .append("path")
+              .datum(waterData)
+              .classed("water", true);
+          booths = mapGroup
+            .selectAll(".booth")
+              .data(boothData.features)
+            .enter().append("path")
+              .classed("booth", true)
+              .style("fill", function(d) { return colours(d.properties.swing); });
+          // set up legend
+          legendRange = colours.domain();
+          d3.select("#gradient")
+            .selectAll("stop")
+              .data(d3.range(11))
+            .enter().append("stop")
+              .attr("offset", function(d) { return d * 10 + "%"; })
+              .attr("style", function(d) { return "stop-color: " + colours(legendRange[2] - (legendRange[2] - legendRange[0]) * (d / 10)) + "; stop-opacity: 1;"; });
+          y = d3.scaleLinear()
+            .domain(legendRange);
+          axis = d3.axisLeft(y)
+            .ticks(5, ".0%")
+            .tickSizeOuter(0);
+          // scaling
+          window.addEventListener("resize", resize);
+          // initial fade-in
+          d3.select("body")
+            .transition()
+              .duration(1000)
+              .style("opacity", 1)
+              .on("end", resize);
+        });
+
+      function resize() {
+        mapGroup.transition()
+          .duration(1000)
+          .style("opacity", 1);
+        booths.transition()
+          .duration(1000)
+          .delay(function(d, i) { return 2000 / boothData.features.length * i; })
+          .style("opacity", 1);
+        legend.transition()
+          .duration(1000)
+          .style("opacity", 1);
+        // adjust scaling
+        dimensions = document.body.getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+        margin = { right: width * .25, left: 15};
+        margin.top = header.node().getBoundingClientRect().height;
+        margin.bottom = footer.node().getBoundingClientRect().height;
+        projection.fitExtent([[margin.left, margin.top + 15], [width - margin.right, height - margin.bottom - 15]], boothData);
+        path.pointRadius(width < 500 ? 7.5 : 10);
+        // draw map elements
+        d3.selectAll(".suburb, .border, .water, .booth")
+          .attr("d", path);
+        // draw legend
+        legend.style("bottom", (margin.bottom + 15) + "px")
+          .style("height", (height * .5) + "px");
+        legend.select("rect")
+          .attr("height", height * .5 - 25);
+        y.range([height * .5 - 25, (1 + legendRange[0] / (legendRange[2] - legendRange[0])) * height * .5 - 25, 0]);
+        axisGroup.call(axis);
+      }
+    </script>
+  </body>
+</html>
