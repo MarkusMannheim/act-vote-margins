@@ -108,7 +108,7 @@ a:hover {
   font-weight: bold;
 }
 @media (max-width: 500px) {
-  #header, #footer {
+  #header, #footer, #map {
     background-color: white;
   }
 }
