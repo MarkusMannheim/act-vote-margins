@@ -51,8 +51,6 @@ h1, p {
   width: 0%;
   background-color: #f2f2f2;
   margin-bottom: 5px;
-  font-family: "ABCSans Black", "Arial Black", sans-serif;
-  color: white;
   font-size: 1.1rem;
   line-height: 2rem;
   display: flex;
@@ -66,10 +64,19 @@ h1, p {
   margin-right: 5px;
   text-align: center;
   opacity: 0;
+  color: white;
+  font-weight: bold;
 }
 .bar {
   height: 100%;
   width: 0px;
+}
+.barLabel {
+  padding: 0 .5rem;
+  opacity: 0;
+}
+.barLabel.inside {
+  color: white;
   text-align: right;
 }
 #footer {
@@ -84,4 +91,9 @@ a:hover {
   color: #F75F00;
 }
 @media (max-width: 500px) {
+  .row {
+    height: 24px;
+    font-size: .9rem;
+    line-height: 1.5rem;
+  }
 }
