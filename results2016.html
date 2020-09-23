@@ -68,23 +68,9 @@
           .duration(1000)
           .style("opacity", 1);
         // scaling
-        window.addEventListener("resize", resize);
         x = d3.scaleLinear()
           .domain([0, d3.max(results, function(d) { return d.votes; })]).nice();
-        // initial fade-in
-        d3.select("body")
-          .transition()
-            .duration(1000)
-            .style("opacity", 1)
-          .on("end", resize);
-      });
-
-      function resize() {
-        // adjust scaling
-        dimensions = document.body.getBoundingClientRect();
-        width = dimensions.width;
-        height = dimensions.height;
-        x.range([0, width - 75]);
+        window.addEventListener("resize", resize);
         // draw results
         bars = rows
           .append("div")
@@ -108,6 +94,20 @@
                 .text(0);
           }
         });
+        // initial fade-in
+        d3.select("body")
+          .transition()
+            .duration(1000)
+            .style("opacity", 1)
+          .on("end", resize);
+      });
+
+      function resize() {
+        // adjust scaling
+        dimensions = document.body.getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+        x.range([0, width - 75]);
         // transition bars and labels
         bars.transition()
           .delay(function(d, i) { return 1000 + 1000 / results.length * i; })
