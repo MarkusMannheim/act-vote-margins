@@ -150,7 +150,7 @@
       }
 
       function begin() {
-        if (round < results[0].progress.length) {
+        cycle = d3.interval(function() {
           // resort based on latest count
           sortedResults = results
             .slice(elected, -1)
@@ -178,40 +178,43 @@
                 if (!d3.select(this).classed("eliminated")) {
                   d3.select(this).classed("eliminated", true);
                   d3.select(this)
-                  .append("p")
-                  .classed("barLabel", true)
-                  .text("ELIMINATED")
-                  .transition()
-                  .style("opacity", 1);
+                    .append("p")
+                      .classed("barLabel", true)
+                      .text("ELIMINATED")
+                      .transition()
+                        .style("opacity", 1);
                 }
               }
             }
           });
           rows.transition()
+            .ease(d3.easeLinear)
+            .duration(350)
             .style("top", function(d) { return y(d.candidate) + "px"; });
           bars.transition()
+            .ease(d3.easeLinear)
+            .duration(350)
             .style("width", function(d) { return x(d.progress[round]) + "px"; });
-          d3.timeout(function() {
-            round = round + 1;
-            begin();
-          }, 250);
-        } else {
-          d3.timeout(function() {
-            round = 0;
-            elected = 0;
-            d3.selectAll(".row")
-              .classed("elected", false)
-              .classed("eliminated", false);
-            d3.selectAll(".barLabel")
-              .remove();
-            bars.transition()
-              .duration(1000)
-              .style("width", "0px");
+          round = round + 1;
+          if (round > results[0].progress.length - 1) {
+            cycle.stop();
             d3.timeout(function() {
-              begin();
-            }, 2000);
-          }, 3000);
-        }
+              round = 0;
+              elected = 0;
+              d3.selectAll(".row")
+                .classed("elected", false)
+                .classed("eliminated", false);
+              d3.selectAll(".barLabel")
+                .remove();
+              bars.transition()
+                .duration(1000)
+                .style("width", "0px");
+              d3.timeout(function() {
+                begin();
+              }, 2000);
+            }, 3000);
+          }
+        }, 350);
       }
     </script>
   </body>
