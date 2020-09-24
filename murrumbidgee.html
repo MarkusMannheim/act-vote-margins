@@ -24,7 +24,7 @@
     <div id="container">
       <div id="header">
         <h1>2016 MURRUMBIDGEE RESULTS</h1>
-        <p>votes and distribution of preferences</p>
+        <p>distribution of preferences</p>
       </div>
       <div id="chart"></div>
       <svg id="quota">
@@ -63,7 +63,7 @@
           .enter().append("div")
             .classed("row", true);
         // scaling
-        chartHeight = results.length * 20 - 2;
+        chartHeight = document.body.getBoundingClientRect().width < 500 ? results.length * 16 - 1 : results.length * 20 - 2;
         chart.style("height", chartHeight + "px");
         y = d3.scaleBand()
           .domain(results.map(function(d) { return d.candidate; }))
