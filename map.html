@@ -183,7 +183,7 @@
           .style("top", "0px") // reset position to tool tip for correct sizing
           .style("left", "0px")
           .html("<p>" + d.data.properties.name + "</p>"
-              + "<p><span>" + d3.format(".1%")(d.data.properties.swing) + "</span> swing to Labor/Greens</p>"
+              + "<p><span>" + d3.format(".1%")(d.data.properties.swing) + "</span> swing " + (d.data.properties.swing < 0 ? "against" : "to") + " Labor/Greens</p>"
               + "<p><span>" + d3.format(".1%")(d.data.properties.gov) + "</span> votes for Labor/Greens</p>"
               + "<p><span>" + d3.format(",.0f")(d.data.properties.votes) + "</span> total votes</p>");
         // set location of tool tip to ensure it's always inside chart
