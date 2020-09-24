@@ -136,6 +136,7 @@ a:hover {
 }
 #tip span {
   color: #FFB300;
+  font-weight: bold;
 }
 @media (max-width: 500px) {
   #header, #footer, #map {
