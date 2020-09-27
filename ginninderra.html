@@ -109,7 +109,7 @@
         stubs = rows
           .append("div")
             .classed("stub", true)
-            .html(function(d) { return d.party == "nan" ? "exhausted votes" : d.candidate + " <span>(" + d.party + ")</span>"; })
+            .html(function(d) { return d.party == null ? "exhausted votes" : d.candidate + " <span>(" + d.party + ")</span>"; })
             .style("background", function(d) { return "linear-gradient(to right, " + d.colour + " 25%, black 300%)"; });
         stubs.transition()
           .delay(function(d, i) { return 500 + 1000 / results.length * i; })
