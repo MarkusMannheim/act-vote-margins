@@ -44,13 +44,6 @@
           .filter(function(d) {
             return d.electorate == "Murrumbidgee";
           });
-        sortedResults = results
-          .slice(0, -1)
-          .sort(function(a, b) {
-            return d3.ascending(a.party, b.party);
-          });
-        sortedResults.push(results[results.length - 1]);
-        results = sortedResults;
         // page elements
         chart = d3.select("#chart");
         header = d3.select("#header");
@@ -70,7 +63,7 @@
           .paddingOuter(0)
           .paddingInner(.1);
         x = d3.scaleLinear()
-          .domain([0, d3.max(results, function(d) { return d3.max(d.progress); })]).nice();
+          .domain([0, d3.max(results, function(d) { return d3.max(d.counts); })]).nice();
         window.addEventListener("resize", resize);
         // initial fade-in
         d3.select("body")
@@ -155,7 +148,7 @@
           sortedResults = results
             .slice(elected, -1)
             .sort(function(a, b) {
-              return d3.descending(a.progress[round], b.progress[round]);
+              return d3.descending(a.counts[round], b.counts[round]);
             });
           sortedResults = results.slice(0, elected).concat(sortedResults);
           sortedResults.push(results[results.length - 1]);
@@ -163,7 +156,7 @@
           y.domain(results.map(function(d) { return d.candidate; }));
           rows.each(function(d) {
             if (!d3.select(this).classed("elected")) {
-              if (d.progress[round] >= quotaValue && d.candidate !== "exhausted") {
+              if (d.counts[round] >= quotaValue && d.candidate !== "exhausted") {
                 d3.select(this).classed("elected", true);
                 elected = elected + 1;
                 d3.select(this)
@@ -174,7 +167,7 @@
                       .text("ELECTED")
                       .transition()
                         .style("opacity", 1);
-              } else if (!d.progress[round] && d.candidate !== "exhausted") {
+              } else if (!d.counts[round] && d.candidate !== "exhausted") {
                 if (!d3.select(this).classed("eliminated")) {
                   d3.select(this).classed("eliminated", true);
                   d3.select(this)
@@ -189,14 +182,14 @@
           });
           rows.transition()
             .ease(d3.easeLinear)
-            .duration(500)
+            .duration(1250)
             .style("top", function(d) { return y(d.candidate) + "px"; });
           bars.transition()
             .ease(d3.easeLinear)
-            .duration(500)
-            .style("width", function(d) { return x(d.progress[round]) + "px"; });
+            .duration(1250)
+            .style("width", function(d) { return x(d.counts[round]) + "px"; });
           round = round + 1;
-          if (round > results[0].progress.length - 1) {
+          if (round > results[0].counts.length - 1) {
             cycle.stop();
             d3.timeout(function() {
               round = 0;
@@ -207,14 +200,14 @@
               d3.selectAll(".barLabel")
                 .remove();
               bars.transition()
-                .duration(1000)
+                .duration(2000)
                 .style("width", "0px");
               d3.timeout(function() {
                 begin();
-              }, 2000);
-            }, 3000);
+              }, 3000);
+            }, 5000);
           }
-        }, 500);
+        }, 1250);
       }
     </script>
   </body>

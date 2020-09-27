@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-155991615-1');
+    </script>
+    <!-- my stuff -->
+    <meta charset="utf-8">
+    <title>2016 Kurrajong results</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Initial scripts -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <link href="./resources/flows.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+  <body>
+    <!-- Initial page layout -->
+    <div id="container">
+      <div id="header">
+        <h1>2016 KURRAJONG RESULTS</h1>
+        <p>distribution of preferences</p>
+      </div>
+      <div id="chart"></div>
+      <svg id="quota">
+        <text>quota</text>
+        <text>(8,142 votes)</text>
+        <line></line>
+      </svg>
+      <div id="footer">
+        <p>Source: <a href='https://www.elections.act.gov.au/elections_and_voting/past_act_legislative_assembly_elections/2016-election/2016-election-results/results-overview' target="_blank">ACT Electoral Commission</a></p>
+      </div>
+    </div>
+    <script>
+      // load chart data
+      d3.json("./resources/finalVotes.json", function(error, data) {
+        // format data
+        results = data
+          .filter(function(d) {
+            return d.electorate == "Kurrajong";
+          });
+        // page elements
+        chart = d3.select("#chart");
+        header = d3.select("#header");
+        quota = d3.select("#quota");
+        quotaValue = 8142;
+        // setup chart
+        rows = chart
+          .selectAll(".row")
+            .data(results, function(d) { return d.candidate; })
+          .enter().append("div")
+            .classed("row", true);
+        // scaling
+        chartHeight = document.body.getBoundingClientRect().width < 500 ? results.length * 16 - 1 : results.length * 20 - 2;
+        chart.style("height", chartHeight + "px");
+        y = d3.scaleBand()
+          .domain(results.map(function(d) { return d.candidate; }))
+          .paddingOuter(0)
+          .paddingInner(.1);
+        x = d3.scaleLinear()
+          .domain([0, d3.max(results, function(d) { return d3.max(d.counts); })]).nice();
+        window.addEventListener("resize", resize);
+        // initial fade-in
+        d3.select("body")
+          .transition()
+            .duration(1000)
+            .style("opacity", 1)
+          .on("end", function() {
+            resize();
+            setup();
+          });
+      });
+
+      function resize() {
+        // adjust scaling
+        dimensions = document.body.getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+        headerHeight = parseFloat(header.style("height"));
+        x.range([0, width - 153]);
+        y.range([headerHeight, headerHeight + chartHeight]);
+        quota.selectAll("text")
+          .attr("x", x(quotaValue) + 153)
+          .attr("y", headerHeight - 7.5);
+        quota.select("text:first-child")
+          .attr("y", headerHeight - 20);
+        quota.select("line")
+          .attr("x1", x(quotaValue) + 153)
+          .attr("x2", x(quotaValue) + 153)
+          .attr("y1", headerHeight)
+          .attr("y2", y.range()[1]);
+      }
+
+      function setup() {
+        // empty rows
+        rows.style("top", function(d) { return y(d.candidate) + "px"; })
+          .style("height", y.bandwidth() + "px")
+          .style("line-height", y.bandwidth() + "px")
+          .transition()
+            .delay(function(d, i) { return 1000 / results.length * i; })
+            .duration(1000)
+            .style("width", "100%");
+        // row labels
+        stubs = rows
+          .append("div")
+            .classed("stub", true)
+            .html(function(d) { return d.party == "nan" ? "exhausted votes" : d.candidate + " <span>(" + d.party + ")</span>"; })
+            .style("background", function(d) { return "linear-gradient(to right, " + d.colour + " 25%, black 300%)"; });
+        stubs.transition()
+          .delay(function(d, i) { return 500 + 1000 / results.length * i; })
+          .duration(1000)
+          .style("opacity", 1);
+        // quota
+        quota.transition()
+          .duration(1000)
+          .delay(1000)
+          .style("opacity", 1);
+        quota.select("line")
+          .attr("y2", headerHeight)
+          .transition()
+            .duration(1000)
+            .attr("y2", y.range()[1])
+          .transition()
+            .delay(1000)
+            .on("end", function() {
+              round = 0;
+              elected = 0;
+              d3.selectAll(".row")
+                .classed("elected", false)
+                .classed("eliminated", false);
+              begin();
+            });
+        // result bars
+        bars = rows
+          .append("div")
+            .classed("bar", true)
+            .style("background-color", function(d) { return d.colour; });
+      }
+
+      function begin() {
+        cycle = d3.interval(function() {
+          // resort based on latest count
+          sortedResults = results
+            .slice(elected, -1)
+            .sort(function(a, b) {
+              return d3.descending(a.counts[round], b.counts[round]);
+            });
+          sortedResults = results.slice(0, elected).concat(sortedResults);
+          sortedResults.push(results[results.length - 1]);
+          results = sortedResults;
+          y.domain(results.map(function(d) { return d.candidate; }));
+          rows.each(function(d) {
+            if (!d3.select(this).classed("elected")) {
+              if (d.counts[round] >= quotaValue && d.candidate !== "exhausted") {
+                d3.select(this).classed("elected", true);
+                elected = elected + 1;
+                d3.select(this)
+                  .select(".bar")
+                    .append("p")
+                      .classed("barLabel", true)
+                      .classed("inside", true)
+                      .text("ELECTED")
+                      .transition()
+                        .style("opacity", 1);
+              } else if (!d.counts[round] && d.candidate !== "exhausted") {
+                if (!d3.select(this).classed("eliminated")) {
+                  d3.select(this).classed("eliminated", true);
+                  d3.select(this)
+                    .append("p")
+                      .classed("barLabel", true)
+                      .text("ELIMINATED")
+                      .transition()
+                        .style("opacity", 1);
+                }
+              }
+            }
+          });
+          rows.transition()
+            .ease(d3.easeLinear)
+            .duration(1250)
+            .style("top", function(d) { return y(d.candidate) + "px"; });
+          bars.transition()
+            .ease(d3.easeLinear)
+            .duration(1250)
+            .style("width", function(d) { return x(d.counts[round]) + "px"; });
+          round = round + 1;
+          if (round > results[0].counts.length - 1) {
+            cycle.stop();
+            d3.timeout(function() {
+              round = 0;
+              elected = 0;
+              d3.selectAll(".row")
+                .classed("elected", false)
+                .classed("eliminated", false);
+              d3.selectAll(".barLabel")
+                .remove();
+              bars.transition()
+                .duration(2000)
+                .style("width", "0px");
+              d3.timeout(function() {
+                begin();
+              }, 3000);
+            }, 5000);
+          }
+        }, 1250);
+      }
+    </script>
+  </body>
+</html>

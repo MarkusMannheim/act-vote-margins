@@ -11,7 +11,7 @@
     </script>
     <!-- my stuff -->
     <meta charset="utf-8">
-    <title>2016 Yerrabi results</title>
+    <title>2016 Ginninderra results</title>
     <meta name="author" content="Markus Mannheim">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Initial scripts -->
@@ -23,13 +23,13 @@
     <!-- Initial page layout -->
     <div id="container">
       <div id="header">
-        <h1>2016 YERRABI RESULTS</h1>
+        <h1>2016 GINNINDERRA RESULTS</h1>
         <p>distribution of preferences</p>
       </div>
       <div id="chart"></div>
       <svg id="quota">
         <text>quota</text>
-        <text>(8,543 votes)</text>
+        <text>(7,858 votes)</text>
         <line></line>
       </svg>
       <div id="footer">
@@ -42,13 +42,13 @@
         // format data
         results = data
           .filter(function(d) {
-            return d.electorate == "Yerrabi";
+            return d.electorate == "Ginninderra";
           });
         // page elements
         chart = d3.select("#chart");
         header = d3.select("#header");
         quota = d3.select("#quota");
-        quotaValue = 8543;
+        quotaValue = 7858;
         // setup chart
         rows = chart
           .selectAll(".row")
