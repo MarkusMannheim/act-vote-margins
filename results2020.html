@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155991615-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-155991615-1');
+    </script>
+    <!-- my stuff -->
+    <meta charset="utf-8">
+    <title>2020 ACT election results</title>
+    <meta name="author" content="Markus Mannheim">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Initial scripts -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <link href="./resources/results2020.css" rel="stylesheet">
+    <link href="./resources/abcLogo64.png" rel="icon">
+  </head>
+  <body>
+    <!-- Initial page layout -->
+    <div id="container">
+      <a href="https://www.abc.net.au/news/elections/act/2020/results" target="_blank">
+        <div id="header">
+          <h1>ACT 2020 ELECTION | FULL RESULTS ></h1>
+          <p>first-preference votes by party</p>
+        </div>
+        <div id="chart"></div>
+      </a>
+    </div>
+    <script>
+      // load chart data
+      d3.csv("./resources/results2020.csv", function(error, data) {
+        // format data
+        results = data
+          .map(function(d) {
+            d.votes = +d.votes;
+            d.percentage = +d.percentage;
+            return d;
+          });
+        // page elements
+        chart = d3.select("#chart");
+        // setup chart
+        rows = chart
+          .selectAll(".row")
+            .data(results)
+          .enter().append("div")
+            .classed("row", true);
+        // empty rows
+        rows.transition()
+          .delay(function(d, i) { return 500 / results.length * i; })
+          .duration(500)
+          .style("width", "100%");
+        // row labels
+        stubs = rows
+          .append("div")
+            .classed("stub", true)
+            .text(function(d) { return d.abb; })
+            .style("background", function(d) { return "linear-gradient(to right, " + d.colour + " 25%, black 300%)"; })
+            .on("mouseover", hoverOver)
+            .on("mouseout", hoverOut);
+        stubs.transition()
+          .delay(function(d, i) { return 500 + 500 / results.length * i; })
+          .duration(500)
+          .style("opacity", 1);
+        // scaling
+        x = d3.scaleLinear()
+          .domain([0, d3.max(results, function(d) { return d.percentage; })]).nice();
+        window.addEventListener("resize", resize);
+        // draw results
+        bars = rows
+          .append("div")
+            .classed("bar", true)
+            .style("background-color", function(d) { return d.colour; })
+            .on("mouseover", hoverOver)
+            .on("mouseout", hoverOut);
+        // vote labels
+        rows.each(function(d, i) {
+          document.body.getBoundingClientRect().width < 500 ? j = 2 : j = 3;
+          if (i < j) {
+            d3.select(this)
+              .select(".bar")
+                .append("p")
+                  .classed("barLabel", true)
+                  .classed("inside", true)
+                  .text(0);
+          } else {
+            d3.select(this)
+              .append("p")
+                .classed("barLabel", true)
+                .text(0);
+          }
+        });
+        // initial fade-in
+        d3.select("body")
+          .transition()
+            .duration(500)
+            .style("opacity", 1)
+          .on("end", resize);
+      });
+
+      function resize() {
+        // adjust scaling
+        dimensions = document.body.getBoundingClientRect();
+        width = dimensions.width;
+        height = dimensions.height;
+        x.range([0, width - 75]);
+        // transition bars and labels
+        bars.transition()
+          .delay(function(d, i) { return 500 + 500 / results.length * i; })
+          .duration(500)
+          .style("width", function(d) { return x(d.percentage) + "px"; });
+        d3.selectAll(".barLabel")
+          .transition()
+            .delay(function(d, i) { return 500 + 500 / results.length * i; })
+            .duration(500)
+            .style("opacity", 1)
+            .tween("text", function(d) {
+              let self = this;
+              let i = d3.interpolate(0, d.percentage)
+              return function(t) {
+                self.textContent = d3.format(".1%")(i(t));
+              };
+            });
+      }
+
+      function hoverOver(d) {
+        d3.select(this.parentNode)
+          .select(".barLabel")
+            .text(d.party);
+      }
+
+      function hoverOut(d) {
+        d3.select(this.parentNode)
+          .select(".barLabel")
+            .text(d3.format(",.0f")(d.votes));
+      }
+    </script>
+  </body>
+</html>
