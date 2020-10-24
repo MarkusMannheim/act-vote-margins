@@ -1,0 +1,94 @@
+@font-face {
+  font-family: "ABCSans Black";
+  font-style: normal;
+  font-weight: normal;
+  src: local("ABCSans Black"), url("./abcsans-black.woff") format("woff");
+}
+@font-face {
+  font-family: "ABCSans Regular";
+  font-style: normal;
+  font-weight: normal;
+  src: local("ABCSans Regular"), url("./abcsans-regular.woff") format("woff");
+}
+@font-face {
+  font-family: "ABCSans Light";
+  font-style: normal;
+  font-weight: normal;
+  src: local("ABCSans Light"), url("./abcsans-light.woff") format("woff");
+}
+:root {
+  font-family: "ABCSans Regular", "Arial", sans-serif;
+  color: #1C1C1C;
+  font-size: 1em;
+}
+body {
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+h1, p {
+  margin: 0;
+}
+#header {
+  padding-bottom: 1rem;
+}
+#header h1 {
+  font-size: 1rem;
+  font-weight: bold;
+  padding-bottom: 0.25rem;
+}
+#header p {
+  font-size: .9rem;
+}
+.row {
+  height: 2.5rem;
+  width: 0%;
+  background-color: #f2f2f2;
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+  line-height: 2.5rem;
+  display: flex;
+}
+.row:last-child {
+  margin-bottom: 0px;
+}
+.stub {
+  height: 100%;
+  width: 70px;
+  margin-right: 5px;
+  text-align: center;
+  opacity: 0;
+  color: white;
+  font-weight: bold;
+}
+.bar {
+  height: 100%;
+  width: 0px;
+}
+.barLabel {
+  padding: 0 .5rem;
+  opacity: 0;
+}
+.barLabel.inside {
+  color: white;
+  text-align: right;
+}
+#footer {
+  padding: .5rem 0;
+  font-size: .8rem;
+}
+a {
+  text-decoration: none;
+  color: #1C1C1C;
+}
+@media (max-width: 500px) {
+  .row {
+    font-size: .9rem;
+  }
+}
