@@ -135,7 +135,7 @@
       function hoverOut(d) {
         d3.select(this.parentNode)
           .select(".barLabel")
-            .text(d3.format(",.0f")(d.percentage));
+            .text(d3.format(".1%")(d.percentage));
       }
     </script>
   </body>
